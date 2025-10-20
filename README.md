@@ -22,3 +22,5 @@ start is only done in backend and frontend will be deployed within backend(backe
 "node":">=20.0.0"
 },
 this is done as vite requires at least node v 20 but we are using 18...
+
+ARCJET_ENV=development -> only needed in development, not in production
