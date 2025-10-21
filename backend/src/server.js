@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import { connectDb } from "./lib/db.js";
 import { ENV } from "./lib/env.js";
+import cors from "cors";
 
 const app = express();
 const __dirname = path.resolve();
@@ -14,6 +15,7 @@ const PORT = ENV.PORT || 3000;
 app.use(express.json()); // will be under req.body (to get access to the fields the user sends)
 // or else  const {fullName, email, password} = req.body this line will be undefined(the variables)
 
+app.use(cors({ origin: ENV.CLIENT_URL, credentials: true })); // basically allow frontend to send cookies to backend
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
