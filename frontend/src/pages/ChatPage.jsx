@@ -1,7 +1,13 @@
-import React from "react";
+import { useAuthStore } from "../store/useAuthStore";
 
 const ChatPage = () => {
-  return <div>ChatPage</div>;
+  const { logout } = useAuthStore();
+  return (
+    <div className="from-zinc-100">
+      ChatPage
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
 };
 
 export default ChatPage;
