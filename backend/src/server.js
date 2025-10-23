@@ -12,7 +12,7 @@ const __dirname = path.resolve();
 
 const PORT = ENV.PORT || 3000;
 
-app.use(express.json({ limit: "10mb" })); // will be under req.body (to get access to the fields the user sends)
+app.use(express.json({ limit: "15mb" })); // will be under req.body (to get access to the fields the user sends)
 // or else  const {fullName, email, password} = req.body this line will be undefined(the variables)
 
 app.use(cors({ origin: ENV.CLIENT_URL, credentials: true })); // basically allow frontend to send cookies to backend
