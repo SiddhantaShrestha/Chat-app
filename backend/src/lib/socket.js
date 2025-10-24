@@ -18,6 +18,12 @@ const io = new Server(server, {
 // apply authentication middleware to all socket coneections
 io.use(socketAuthMiddleware);
 
+// to check if user is online or not
+export function getReceiverSocketIds(userId) {
+  // return userSocketMap[userId];
+  return userSocketMap.get(userId); //return all sockets for that user
+}
+
 //for storing online users
 // const userSocketMap = {}; // {userId: socketId}
 const userSocketMap = new Map(); // Map<userId, Set<socketId>>
@@ -39,6 +45,31 @@ io.on("connection", (socket) => {
   //io.emit() is used to send events to all connected clients
   // io.emit("getOnlineUsers", Object.keys(userSocketMap)); // take all the keys and send it back to the client
   io.emit("getOnlineUsers", Array.from(userSocketMap.keys()));
+
+  //for typing
+  socket.on("userTyping", ({ receiverId }) => {
+    const receiverSocketIds = getReceiverSocketIds(receiverId);
+    if (receiverSocketIds) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("userTyping", {
+          userId: userId,
+          isTyping: true,
+        });
+      });
+    }
+  });
+
+  socket.on("userStoppedTyping", ({ receiverId }) => {
+    const receiverSocketIds = getReceiverSocketIds(receiverId);
+    if (receiverSocketIds) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("userTyping", {
+          userId: userId,
+          isTyping: false,
+        });
+      });
+    }
+  });
 
   //listen for the connections
   //with socket on, we listen for events from clients

@@ -7,20 +7,47 @@ import MessageInput from "./MessageInput";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 
 function ChatContainer() {
-  const { selectedUser, getMessagesByUserId, messages, isMessagesLoading } =
-    useChatStore();
+  const {
+    selectedUser,
+    getMessagesByUserId,
+    messages,
+    isMessagesLoading,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+    subscribeToTyping,
+    unsubscribeFromTyping,
+    typingUsers,
+  } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
     getMessagesByUserId(selectedUser._id);
-  }, [selectedUser, getMessagesByUserId]);
+    subscribeToMessages();
+    subscribeToTyping();
+
+    return () => {
+      unsubscribeFromMessages();
+      unsubscribeFromTyping();
+    };
+  }, [
+    selectedUser,
+    getMessagesByUserId,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+    subscribeToTyping,
+    unsubscribeFromTyping,
+  ]);
 
   useEffect(() => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  //  Check if selected user is typing
+  const isSelectedUserTyping = typingUsers[selectedUser._id];
+
   return (
     <>
       <ChatHeader />
@@ -66,7 +93,29 @@ function ChatContainer() {
                 </div>
               </div>
             ))}
-            {/* scroll target */}
+
+            {/* Typing indicator */}
+            {isSelectedUserTyping && (
+              <div className="chat chat-start">
+                <div className="chat-bubble bg-slate-800/50 border border-slate-700/50">
+                  <div className="flex items-center gap-1 py-1">
+                    <div
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={messageEndRef}></div>
           </div>
         ) : isMessagesLoading ? (
