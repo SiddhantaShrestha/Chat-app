@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import useKeyboardSound from "../hooks/useKeyboardSound";
 import { useChatStore } from "../store/useChatStore";
 import { ImageIcon, SendIcon, XIcon } from "lucide-react";
@@ -8,16 +8,45 @@ function MessageInput() {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+  const typingTimeoutRef = useRef(null); //  Track typing timeout
+  const isTypingRef = useRef(false); //  Track if currently typing
 
-  const { sendMessage, isSoundEnabled } = useChatStore();
+  const {
+    sendMessage,
+    isSoundEnabled,
+    selectedUser,
+    emitTyping,
+    emitStoppedTyping,
+  } = useChatStore();
+
+  //  Clean up on unmount or when selectedUser changes
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (isTypingRef.current && selectedUser) {
+        emitStoppedTyping(selectedUser._id);
+      }
+    };
+  }, [selectedUser, emitStoppedTyping]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
     if (isSoundEnabled) playRandomKeyStrokeSound();
 
+    //  Stop typing indicator when sending
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    if (isTypingRef.current) {
+      isTypingRef.current = false;
+      emitStoppedTyping(selectedUser._id);
+    }
+
     sendMessage({
-      text: text.trim(), // removes unnecessary spaces
+      text: text.trim(),
       image: imagePreview,
     });
     setText("");
@@ -40,8 +69,41 @@ function MessageInput() {
 
   const removeImage = (e) => {
     setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  // Handle text change with typing indicator
+  const handleTextChange = (e) => {
+    const value = e.target.value;
+    setText(value);
+    if (isSoundEnabled) playRandomKeyStrokeSound();
+
+    // Emit typing event if not already typing and text is not empty
+    if (!isTypingRef.current && value.trim()) {
+      isTypingRef.current = true;
+      emitTyping(selectedUser._id);
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout to emit stopped typing after 2 seconds of inactivity
+    if (value.trim()) {
+      typingTimeoutRef.current = setTimeout(() => {
+        isTypingRef.current = false;
+        emitStoppedTyping(selectedUser._id);
+      }, 2000);
+    } else {
+      // If text is empty, immediately stop typing
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        emitStoppedTyping(selectedUser._id);
+      }
+    }
+  };
+
   return (
     <div className="p-4 border-t border-slate-700/50">
       {imagePreview && (
@@ -70,10 +132,7 @@ function MessageInput() {
         <input
           type="text"
           value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            isSoundEnabled && playRandomKeyStrokeSound();
-          }}
+          onChange={handleTextChange} //  Use new handler
           className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
           placeholder="Type your message..."
         />
