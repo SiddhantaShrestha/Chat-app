@@ -22,10 +22,10 @@ function ChatContainer() {
   const messageEndRef = useRef(null);
 
   useEffect(() => {
+    if (!selectedUser?._id) return;
     getMessagesByUserId(selectedUser._id);
     subscribeToMessages();
     subscribeToTyping();
-
     return () => {
       unsubscribeFromMessages();
       unsubscribeFromTyping();
@@ -45,13 +45,13 @@ function ChatContainer() {
     }
   }, [messages]);
 
-  //  Check if selected user is typing
-  const isSelectedUserTyping = typingUsers[selectedUser._id];
+  const isSelectedUserTyping =
+    selectedUser?._id && typingUsers[selectedUser._id];
 
   return (
     <>
       <ChatHeader />
-      <div className="flex-1 px-6 overflow-y-auto py-8">
+      <div className="flex-1 px-3 md:px-6 overflow-y-auto py-4 md:py-8">
         {messages.length > 0 && !isMessagesLoading ? (
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((msg) => (
@@ -62,7 +62,7 @@ function ChatContainer() {
                 }`}
               >
                 <div
-                  className={`chat-bubble relative ${
+                  className={`chat-bubble relative max-w-[85%] md:max-w-[75%] break-words ${
                     msg.senderId === authUser._id
                       ? "bg-cyan-600 text-white"
                       : "bg-slate-800 text-slate-200"
@@ -72,17 +72,15 @@ function ChatContainer() {
                     <img
                       src={msg.image}
                       alt="Shared"
-                      className="rounded-lg h-48 object-cover"
+                      className="rounded-lg h-40 md:h-48 object-cover w-full"
                     />
                   )}
                   {msg.text && <p className="mt-2">{msg.text}</p>}
                   <p className="text-xs mt-1 opacity-75 flex items-center gap-1">
                     {msg.isOptimistic ? (
-                      <>
-                        <span className="italic text-slate-300 animate-pulse">
-                          Sending...
-                        </span>
-                      </>
+                      <span className="italic text-slate-300 animate-pulse">
+                        Sending...
+                      </span>
                     ) : (
                       new Date(msg.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
@@ -94,7 +92,6 @@ function ChatContainer() {
               </div>
             ))}
 
-            {/* Typing indicator */}
             {isSelectedUserTyping && (
               <div className="chat chat-start">
                 <div className="chat-bubble bg-slate-800/50 border border-slate-700/50">
@@ -102,26 +99,28 @@ function ChatContainer() {
                     <div
                       className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                       style={{ animationDelay: "0ms" }}
-                    ></div>
+                    />
                     <div
                       className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                       style={{ animationDelay: "150ms" }}
-                    ></div>
+                    />
                     <div
                       className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                       style={{ animationDelay: "300ms" }}
-                    ></div>
+                    />
                   </div>
                 </div>
               </div>
             )}
 
-            <div ref={messageEndRef}></div>
+            <div ref={messageEndRef} />
           </div>
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />
         ) : (
-          <NoChatHistoryPlaceholder name={selectedUser.fullName} />
+          selectedUser && (
+            <NoChatHistoryPlaceholder name={selectedUser.fullName} />
+          )
         )}
       </div>
 

@@ -1,13 +1,14 @@
+// ChatsList.jsx
 import { useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import UsersLoadingSkeleton from "./UsersLoadingSkeleton";
 import NoChatsFound from "./NoChatsFound";
 import { useAuthStore } from "../store/useAuthStore";
+import ListEndHint from "./ListEndHint";
 
 function ChatsList() {
   const { getMyChatPartners, chats, isUsersLoading, setSelectedUser } =
     useChatStore();
-
   const { onlineUsers } = useAuthStore();
 
   useEffect(() => {
@@ -22,17 +23,16 @@ function ChatsList() {
       {chats.map((chat) => (
         <div
           key={chat._id}
-          className="bg-cyan-500/10 p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-colors"
+          className="bg-cyan-500/10 p-3 md:p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-colors"
           onClick={() => setSelectedUser(chat)}
         >
           <div className="flex items-center gap-3">
-            {/* TODO: FIX ONLINE STATUS  BY USING SOCKET*/}
             <div
               className={`avatar ${
                 onlineUsers.includes(chat._id) ? "online" : "offline"
               }`}
             >
-              <div className="size-12 rounded-full">
+              <div className="size-10 md:size-12 rounded-full">
                 <img
                   src={chat.profilePic || "/avatar.png"}
                   alt={chat.fullName}
@@ -45,8 +45,8 @@ function ChatsList() {
           </div>
         </div>
       ))}
+      <ListEndHint />
     </>
   );
 }
-
 export default ChatsList;
