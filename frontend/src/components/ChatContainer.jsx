@@ -36,16 +36,8 @@ function ChatContainer() {
       unsubscribeFromTyping();
       unsubscribeFromReactions();
     };
-  }, [
-    selectedUser,
-    getMessagesByUserId,
-    subscribeToMessages,
-    unsubscribeFromMessages,
-    subscribeToTyping,
-    unsubscribeFromTyping,
-    subscribeToReactions,
-    unsubscribeFromReactions,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Zustand store functions are stable references
+  }, [selectedUser?._id]);
 
   useEffect(() => {
     if (messageEndRef.current) {
