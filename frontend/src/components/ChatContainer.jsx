@@ -95,7 +95,9 @@ function ChatContainer() {
                     msg.senderId === authUser._id ? "chat-end" : "chat-start"
                   }`}
                 >
-                  <div className="flex flex-col items-end gap-1">
+                  <div className={`flex flex-col gap-1 ${
+                    msg.senderId === authUser._id ? "items-end" : "items-start"
+                  }`}>
                     <div
                       className={`chat-bubble relative max-w-[85%] md:max-w-[75%] break-words ${
                         msg.senderId === authUser._id

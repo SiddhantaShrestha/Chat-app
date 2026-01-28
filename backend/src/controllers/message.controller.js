@@ -129,13 +129,29 @@ export const toggleReaction = async (req, res) => {
     const { emoji } = req.body;
     const userId = req.user._id;
 
+    const ALLOWED_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
     if (!emoji) {
       return res.status(400).json({ message: "Emoji is required" });
+    }
+
+    if (!ALLOWED_REACTIONS.includes(emoji)) {
+      return res.status(400).json({ message: "Invalid emoji reaction" });
     }
 
     const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if user has permission to react to this message
+    if (
+      !message.senderId.equals(userId) &&
+      !message.receiverId.equals(userId)
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You cannot react to this message" });
     }
 
     // Check if user already reacted with this emoji
@@ -179,7 +195,7 @@ export const toggleReaction = async (req, res) => {
 
     res.status(200).json(message);
   } catch (error) {
-    console.log("Error toggling reaction", error);
+    console.log("Error in toggling reaction", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

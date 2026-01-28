@@ -173,7 +173,7 @@ export const useChatStore = create((set, get) => ({
       );
       set({ messages: updatedMessages });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add reaction");
+      toast.error(error.response?.data?.message || "Failed to toggle reaction");
     }
   },
 
