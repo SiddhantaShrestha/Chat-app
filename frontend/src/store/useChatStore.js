@@ -162,16 +162,11 @@ export const useChatStore = create((set, get) => ({
 
   toggleReaction: async (messageId, emoji) => {
     try {
-      const res = await axiosInstance.post(`/messages/reaction/${messageId}`, {
+      // Send reaction toggle request to backend
+      // The UI will be updated via WebSocket 'reactionUpdate' event
+      await axiosInstance.post(`/messages/reaction/${messageId}`, {
         emoji,
       });
-      
-      // Update the message in the local state
-      const { messages } = get();
-      const updatedMessages = messages.map((msg) =>
-        msg._id === messageId ? res.data : msg
-      );
-      set({ messages: updatedMessages });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to toggle reaction");
     }
