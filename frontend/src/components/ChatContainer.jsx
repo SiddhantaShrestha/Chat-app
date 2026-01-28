@@ -36,7 +36,7 @@ function ChatContainer() {
       unsubscribeFromTyping();
       unsubscribeFromReactions();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Zustand store functions are stable references
   }, [selectedUser?._id]);
 
   useEffect(() => {
