@@ -4,6 +4,7 @@ import {
   getMessages,
   sendMessage,
   getChatPartners,
+  toggleReaction,
 } from "../controllers/message.controller.js";
 import { protectedRoute } from "../middleware/auth.middleware.js";
 import { arcjetProtection } from "../middleware/arcjet.middleware.js";
@@ -17,5 +18,6 @@ router.get("/contacts", getAllContacts);
 router.get("/chats", getChatPartners);
 router.get("/:id", getMessages);
 router.post("/send/:id", sendMessage);
+router.post("/reaction/:messageId", toggleReaction);
 
 export default router;

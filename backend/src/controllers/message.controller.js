@@ -122,3 +122,80 @@ export const getChatPartners = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const toggleReaction = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { emoji } = req.body;
+    const userId = req.user._id;
+
+    const ALLOWED_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+    if (!emoji) {
+      return res.status(400).json({ message: "Emoji is required" });
+    }
+
+    if (!ALLOWED_REACTIONS.includes(emoji)) {
+      return res.status(400).json({ message: "Invalid emoji reaction" });
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if user has permission to react to this message
+    if (
+      !message.senderId.equals(userId) &&
+      !message.receiverId.equals(userId)
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You cannot react to this message" });
+    }
+
+    // Check if user already reacted with this emoji
+    const existingReactionIndex = message.reactions.findIndex(
+      (reaction) =>
+        reaction.userId.toString() === userId.toString() &&
+        reaction.emoji === emoji
+    );
+
+    if (existingReactionIndex > -1) {
+      // Remove reaction
+      message.reactions.splice(existingReactionIndex, 1);
+    } else {
+      // Remove any existing reaction from this user
+      message.reactions = message.reactions.filter(
+        (reaction) => reaction.userId.toString() !== userId.toString()
+      );
+      // Add new reaction
+      message.reactions.push({ userId, emoji });
+    }
+
+    await message.save();
+
+    // Emit to all connected sockets
+    const senderSocketIds = getReceiverSocketIds(message.senderId);
+    const receiverSocketIds = getReceiverSocketIds(message.receiverId);
+
+    const updatedMessage = message.toObject();
+
+    if (receiverSocketIds) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("reactionUpdate", updatedMessage);
+      });
+    }
+
+    if (senderSocketIds) {
+      senderSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("reactionUpdate", updatedMessage);
+      });
+    }
+
+    res.status(200).json(message);
+  } catch (error) {
+    console.log("Error in toggling reaction", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

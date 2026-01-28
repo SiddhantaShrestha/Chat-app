@@ -159,4 +159,41 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
   },
+
+  toggleReaction: async (messageId, emoji) => {
+    try {
+      const res = await axiosInstance.post(`/messages/reaction/${messageId}`, {
+        emoji,
+      });
+      
+      // Update the message in the local state
+      const { messages } = get();
+      const updatedMessages = messages.map((msg) =>
+        msg._id === messageId ? res.data : msg
+      );
+      set({ messages: updatedMessages });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to toggle reaction");
+    }
+  },
+
+  subscribeToReactions: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.on("reactionUpdate", (updatedMessage) => {
+      const { messages } = get();
+      const updatedMessages = messages.map((msg) =>
+        msg._id === updatedMessage._id ? updatedMessage : msg
+      );
+      set({ messages: updatedMessages });
+    });
+  },
+
+  unsubscribeFromReactions: () => {
+    const socket = useAuthStore.getState().socket;
+    if (socket) {
+      socket.off("reactionUpdate");
+    }
+  },
 }));
